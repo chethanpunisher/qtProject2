@@ -1,4 +1,4 @@
-QT       += core gui charts serialport
+QT       += core gui charts serialport printsupport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -15,6 +15,7 @@ QXLSX_SOURCEPATH=./source/  # current QXlsx source path is ./source/
 include(./QXlsx.pri)
 
 SOURCES += \
+    analysisplot.cpp \
     batchdialog.cpp \
     calibrationwin.cpp \
     main.cpp \
@@ -26,6 +27,7 @@ SOURCES += \
     mainwindow.cpp
 
 HEADERS += \
+    analysisplot.h \
     batchdialog.h \
     calibrationwin.h \
     config.h \
@@ -37,6 +39,7 @@ HEADERS += \
     mainwindow.h
 
 FORMS += \
+    analysisplot.ui \
     batchdialog.ui \
     calibrationwin.ui \
     mainwindow.ui \

@@ -9,7 +9,7 @@ struct operationParameters
     QString sampleName;
     int runTime;
     int oscAngle;
-    int torqueUnit;
+    QString torqueUnit;
     int tempSetPoint;
     QString excelFilePath;
 };

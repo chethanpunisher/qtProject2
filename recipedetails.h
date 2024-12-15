@@ -37,7 +37,7 @@ private slots:
 private:
     Ui::RecipeDetails *ui;
     QString excelFilePath;
-    JsonManager *jsonManager;
+    //JsonManager *jsonManager;
     ExcelHandler *excelHandler;
     bool existingSelected;
 };

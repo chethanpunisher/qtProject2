@@ -1,4 +1,40 @@
 {
     "samples": [
+        {
+            "excelFilePath": "E:/newExcelTest/sample1",
+            "index": 0,
+            "oscAngle": 3,
+            "runTime": 20,
+            "sampleName": "sample1",
+            "tempSetPoint": 180,
+            "torqueAngle": "dn"
+        },
+        {
+            "excelFilePath": "E:/newExcelTest/sample2",
+            "index": 1,
+            "oscAngle": 3,
+            "runTime": 20,
+            "sampleName": "sample2",
+            "tempSetPoint": 120,
+            "torqueAngle": "ws"
+        },
+        {
+            "excelFilePath": "E:/newExcelTest/sample3",
+            "index": 2,
+            "oscAngle": 3,
+            "runTime": 20,
+            "sampleName": "sample3",
+            "tempSetPoint": 123,
+            "torqueAngle": "cw"
+        },
+        {
+            "excelFilePath": "E:/newExcelTest/sample4",
+            "index": 3,
+            "oscAngle": 3,
+            "runTime": 20,
+            "sampleName": "sample4",
+            "tempSetPoint": 130,
+            "torqueAngle": "few"
+        }
     ]
 }

@@ -60,7 +60,7 @@ private slots:
 
 public slots:
     void batchNumberReceived(const QString &temp);
-    void updateParameters(const int &index);
+    void updateParameters(int index);
     void initializeSerialPort(const QString port);
     void updateComPort();
 
@@ -73,7 +73,7 @@ private:
     void signalConnection();
     void initTables();
     void writeToTempPlot(int x, int y);
-    void writeToLoadCellPlot(int x, int y);
+    void writeToLoadCellPlot(double x, int y);
     void clearTempPlot();
     void clearLoadCellPlot();
     void writeSerial(const QString data1);
@@ -104,7 +104,7 @@ private:
     QStringList newList;
     QString currentText;
     QString newText;
-    int xAxisCounter;
+    double xAxisCounter;
     QValueAxis *xAxis;
     QValueAxis *yAxis;
     int xAxisCounter2;

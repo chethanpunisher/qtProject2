@@ -6,7 +6,8 @@ MainWindow::MainWindow(QWidget *parent)
     serialComm(new SerialComm(this))
     , dataParser(new DataParser(this))
     , excelHandler(new ExcelHandler(this))
-    , recipeDetails(new RecipeDetails(this))
+    , operaParam(new operationParameters())
+    ,recipeDetails(nullptr)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
@@ -15,7 +16,8 @@ MainWindow::MainWindow(QWidget *parent)
     initUI2();
     signalConnection();
     initTables();
-    initializeSerialPort("COM24");
+    qDebug()<<"testing";
+    //initializeSerialPort("COM29");
     QString jsonFilePath = "sampleData.json";
     jsonManager = new JsonManager(jsonFilePath);
     startFlg = false;
@@ -25,7 +27,7 @@ MainWindow::MainWindow(QWidget *parent)
     // Timer to check for changes in the external list and update the combo box
     QTimer *updateTimer = new QTimer(this);
     QObject::connect(updateTimer, &QTimer::timeout, this, &MainWindow::updateComPort);
-    updateTimer->start(1000); // Check for updates every second
+    //updateTimer->start(1000); // Check for updates every second
 
     // QTimer *updateTimer2 = new QTimer(this);
     // QObject::connect(updateTimer2, &QTimer::timeout, this, &MainWindow::plotTest);
@@ -92,7 +94,7 @@ void MainWindow::initUI2()
     xAxis2->setTitleText("Time in minutes");
     xAxis2->setLabelFormat("%.2f");
     xAxis2->setRange(0, 10); // Show 5 seconds of data at a time
-    xAxis2->setTickCount(6);
+    xAxis2->setTickCount(11);
     chart2->addAxis(xAxis2, Qt::AlignBottom);
     //series2->attachAxis(xAxis2);
 
@@ -152,7 +154,7 @@ void MainWindow::writeToTempPlot(int x, int y){
     xAxis->setRange(x > 5.0 ? x - 5.0 : 0.0, x);
 }
 
-void MainWindow::writeToLoadCellPlot(int x, int y){
+void MainWindow::writeToLoadCellPlot(double x, int y){
     series2->append(x, y);
     if (x > 10.0) {
         series2->remove(0); // Remove the first point
@@ -184,7 +186,6 @@ void MainWindow::signalConnection(){
     connect(dataParser, &DataParser::loadDataParsed, this, &MainWindow::updateLoadValue);
     connect(dataParser, &DataParser::cycleCountParsed, this, &MainWindow::updateCycleCount);
     connect(dataParser, &DataParser::tempValParsed, this, &MainWindow::updateTemperatureValue);
-    connect(recipeDetails, &RecipeDetails::onParametersSetTrigger, this, &MainWindow::updateParameters);
 }
 
 void MainWindow::onSerialPortError(const QString &error)
@@ -194,12 +195,12 @@ void MainWindow::onSerialPortError(const QString &error)
 
 void MainWindow::updateLoadValue(int modeNumber, double loadValue)
 {
-    qDebug() << "Mode" << modeNumber << "Load Value:" << loadValue << " , ";
+    qDebug() << "Mode" << modeNumber << "Load Value:" << loadValue << " , "<<xAxisCounter;
     if(modeNumber == 0 && newFlg){
         writeToLoadCellPlot(xAxisCounter, loadValue);
         //writeToTempPlot(xAxisCounter, tempValue);
-        xAxisCounter++;
-        if(xAxisCounter == 10){
+        xAxisCounter += 0.000333333333333;
+        if(xAxisCounter > 10){
             newFlg = false;
             xAxisCounter = 0;
         }
@@ -228,20 +229,21 @@ void MainWindow::updateTemperatureValue(double tempVal, int tempFaultDetec)
 
 void MainWindow::on_pushButton_start_clicked()
 {
-    // if(startFlg){
-    //     batchDialog = new BatchDialog(this);
-    //     batchDialog->setAttribute(Qt::WA_DeleteOnClose);
-    //     connect(batchDialog, &BatchDialog::batchAccepted, this, &MainWindow::batchNumberReceived);
-    //     batchDialog->show();
-    // }
-    // else{
-    //     QMessageBox::critical(this, "Required info","Please enter the recipe details first");
-    // }
+    if(startFlg){
+        batchDialog = new BatchDialog(this);
+        batchDialog->setAttribute(Qt::WA_DeleteOnClose);
+        connect(batchDialog, &BatchDialog::batchAccepted, this, &MainWindow::batchNumberReceived);
+        batchDialog->show();
+    }
+    else{
+        QMessageBox::critical(this, "Required info","Please enter the recipe details first");
+    }
 
     series2 = new QLineSeries();
     chart2->addSeries(series2);
     series2->attachAxis(xAxis2);
     series2->attachAxis(yAxis2);
+    xAxis2->setRange(0, 10);
     newFlg = true;
     //series2 = seriesNew;
 }
@@ -253,7 +255,7 @@ void MainWindow::batchNumberReceived(const QString &temp){
     sendParameters();
 }
 
-void MainWindow::updateParameters(const int &index){
+void MainWindow::updateParameters(int index){
     paramIndex = index;
     qDebug()<<"index received"<<index;
     QJsonObject jsonObject1 = jsonManager->loadParametersByIndex(index);
@@ -261,8 +263,9 @@ void MainWindow::updateParameters(const int &index){
     operaParam->oscAngle = jsonObject1.value("oscAngle").toInt();
     operaParam->runTime = jsonObject1.value("runTime").toInt();
     operaParam->tempSetPoint = jsonObject1.value("tempSetPoint").toInt();
-    operaParam->torqueUnit = jsonObject1.value("torqueUnit").toInt();
+    operaParam->torqueUnit = jsonObject1.value("torqueUnit").toString();
     operaParam->excelFilePath = jsonObject1.value("excelFilePath").toString();
+    qDebug()<<operaParam->sampleName<<" ,"<<operaParam->oscAngle<<" ,"<<operaParam->runTime<<" ,"<<operaParam->tempSetPoint<<" ,"<<operaParam->excelFilePath;
     startFlg = true;
 
 }
@@ -271,15 +274,18 @@ void MainWindow::on_pushButton_recipeDetails_clicked()
     recipeDetails = new RecipeDetails(this);
     recipeDetails->setAttribute(Qt::WA_DeleteOnClose);
     recipeDetails->show();
+    connect(recipeDetails, &RecipeDetails::onParametersSetTrigger, this, &MainWindow::updateParameters);
+
 }
 
 void MainWindow::excelCreate(){
-    QString excelPath = operaParam->excelFilePath + "/" + batchNumberGlobal;
+    QString excelPath = operaParam->excelFilePath + "/" + batchNumberGlobal;  //operaParam->excelFilePath + "/" + batchNumberGlobal;
     if (!excelPath.endsWith(".xlsx", Qt::CaseInsensitive)) {
         excelPath += ".xlsx";
     }
-
+    qDebug()<<excelPath;
     excelHandler->createNewExcelFile(excelPath);
+    //excelHandler->saveAndClose();
 }
 
 void MainWindow::sendParameters(){

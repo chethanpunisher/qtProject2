@@ -12,7 +12,7 @@ JsonManager::JsonManager(const QString& filePath, QObject* parent) : QObject(par
 bool JsonManager::createJsonFile() {
     QFile file(filePath);
     if (file.exists()) return true;  // File already exists
-
+    qDebug()<<"enteres";
     if (file.open(QIODevice::WriteOnly)) {
         QJsonDocument doc(QJsonObject{{"samples", QJsonArray()}});
         file.write(doc.toJson());

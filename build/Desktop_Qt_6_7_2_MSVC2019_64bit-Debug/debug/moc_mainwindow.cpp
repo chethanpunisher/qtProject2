@@ -162,7 +162,7 @@ Q_CONSTINIT const QMetaObject MainWindow::staticMetaObject = { {
         QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
         // method 'updateParameters'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
-        QtPrivate::TypeAndForceComplete<const int &, std::false_type>,
+        QtPrivate::TypeAndForceComplete<int, std::false_type>,
         // method 'initializeSerialPort'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         QtPrivate::TypeAndForceComplete<const QString, std::false_type>,
