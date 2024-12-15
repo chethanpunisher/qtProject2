@@ -1,5 +1,9 @@
 #include "recipedetails.h"
 #include "ui_recipedetails.h"
+#include "jsonmanager.h"
+
+QString jsonFilePath1 = "sampleData.json";
+JsonManager jsonManager2(jsonFilePath1);
 
 RecipeDetails::RecipeDetails(QWidget *parent)
     : QDialog(parent)
@@ -7,11 +11,12 @@ RecipeDetails::RecipeDetails(QWidget *parent)
     , ui(new Ui::RecipeDetails)
 {
     ui->setupUi(this);
-
-    QString jsonFilePath1 = "sampleData.json";
-    jsonManager = new JsonManager(jsonFilePath1);
+    qDebug()<<"temsit2";
+    jsonManager2.createJsonFile();
+    //QString jsonFilePath1 = "sampleData.json";
+    //jsonManager = new JsonManager(jsonFilePath1);
     existingSelected = false;
-    if(!jsonManager->createJsonFile()){
+    if(!jsonManager2.createJsonFile()){
         qDebug()<<"countn't create json file";
         close();
     }
@@ -56,10 +61,14 @@ void RecipeDetails::on_pushButton_ok_clicked()
             newSampleParam["torqueAngle"] = ui->lineEdit_torqueUnit->text();
             newSampleParam["tempSetPoint"] = ui->lineEdit_tempSetPoint->text().toInt();
             newSampleParam["excelFilePath"] = tempPath;
-            int index = jsonManager->getSampleWithHighestIndex();
+            int index = jsonManager2.getSampleWithHighestIndex();
             newSampleParam["index"] = index+1;
-            jsonManager->addOperationParameters(newSampleParam);
+            bool f = jsonManager2.addOperationParameters(newSampleParam);
+            if(!f){
+                qDebug()<<"failed";
+            }
             emit onParametersSetTrigger(index+1);
+            close();
         }
     }
     else{
@@ -116,7 +125,7 @@ void RecipeDetails::on_recentOperationsListWidget_itemClicked(QListWidgetItem *i
     qDebug()<<index;
 
 
-    QJsonObject samples = jsonManager->loadParametersByIndex(index);
+    QJsonObject samples = jsonManager2.loadParametersByIndex(index);
 
     if(!samples.empty()){
         ui->lineEdit_sampleName->setText(samples.value("sampleName").toString());
@@ -131,7 +140,7 @@ void RecipeDetails::on_recentOperationsListWidget_itemClicked(QListWidgetItem *i
 // Function to list sample parameters by ascending index
 QList<QJsonObject> RecipeDetails::listSamplesByAscendingIndex() {
     // Retrieve all samples from JsonManager
-    QJsonArray samplesArray = jsonManager->getAllSamples();
+    QJsonArray samplesArray = jsonManager2.getAllSamples();
 
     // Convert QJsonArray to QList<QJsonObject> for easier sorting
     QList<QJsonObject> samplesList;
