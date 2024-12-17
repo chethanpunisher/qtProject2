@@ -24,6 +24,8 @@
 #include <QValueAxis>
 #include <calibrationwin.h>
 
+
+class Worker;
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
@@ -37,6 +39,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    // Ui::MainWindow *ui;
 
 private slots:
     void onSerialPortError(const QString &error);
@@ -72,7 +75,7 @@ private:
     void updateAxis2();
     void signalConnection();
     void initTables();
-    void writeToTempPlot(int x, int y);
+    void writeToTempPlot(int x, int y, int y2);
     void writeToLoadCellPlot(double x, int y);
     void clearTempPlot();
     void clearLoadCellPlot();
@@ -112,6 +115,34 @@ private:
     QValueAxis *yAxis2;
     CalibrationWin *calibrationWin;
     int tempValue;
+    int tempValue2;
     bool newFlg;
+    int excelX;
+    int excelY;
 };
+
+
+#include <QThread>
+#include <QObject>
+#include <QDebug>
+
+
+class Worker : public QObject {
+    Q_OBJECT
+public:
+    explicit Worker(QObject *parent = nullptr);
+
+public slots:
+    void doWork();
+
+private:
+    //Ui::Worker *ui;
+    //MainWindow mw;
+
+signals:
+    void workFinished();
+};
+
 #endif // MAINWINDOW_H
+
+

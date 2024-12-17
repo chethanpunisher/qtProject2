@@ -1,6 +1,15 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+Worker::Worker(QObject *parent): QObject(parent){
+    // mw.ui->label_2->setText("thread");
+}
+
+void Worker::doWork(){
+    qDebug()<<"thrread";
+}
+
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
     serialComm(new SerialComm(this))
@@ -12,6 +21,21 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    QThread *thread = new QThread;
+
+    // Create a Worker object
+    Worker *worker = new Worker;
+
+    // Move the worker to the thread
+    worker->moveToThread(thread);
+
+    // Connect signals and slots
+    QObject::connect(thread, &QThread::started, worker, &Worker::doWork);
+    QObject::connect(worker, &Worker::workFinished, thread, &QThread::quit); // End thread loop when done
+    QObject::connect(worker, &Worker::workFinished, worker, &Worker::deleteLater); // Delete worker when done
+    QObject::connect(thread, &QThread::finished, thread, &QThread::deleteLater); // Delete thread when finished
+
+    thread->start();
     initUI();
     initUI2();
     signalConnection();
@@ -24,6 +48,8 @@ MainWindow::MainWindow(QWidget *parent)
     xAxisCounter = 0;
     xAxisCounter2 = 0;
     newFlg = false;
+    excelX = 0;
+    excelY =0;
     // Timer to check for changes in the external list and update the combo box
     QTimer *updateTimer = new QTimer(this);
     QObject::connect(updateTimer, &QTimer::timeout, this, &MainWindow::updateComPort);
@@ -146,10 +172,12 @@ void MainWindow::initTables(){
     ui->tableView_process->verticalHeader()->setVisible(false);
 }
 
-void MainWindow::writeToTempPlot(int x, int y){
+void MainWindow::writeToTempPlot(int x, int y, int y2){
     series->append(x, y);
+    series_2->append(x, y2);
     if (x > 10.0) {
         series->remove(0); // Remove the first point
+        series_2->remove(0);
     }
     xAxis->setRange(x > 5.0 ? x - 5.0 : 0.0, x);
 }
@@ -163,13 +191,14 @@ void MainWindow::writeToLoadCellPlot(double x, int y){
 }
 
 void MainWindow::clearTempPlot(){
-    //chart->axisX()->setRange(0, 5);
-    //ser->clear();
+    chart->axisX()->setRange(0, 10);
+    series->clear();
+    series_2->clear();
 }
 
 void MainWindow::clearLoadCellPlot(){
-    //chart2->axisX()->setRange(0, 5);
-    //ser2->clear();
+    chart2->axisX()->setRange(0, 10);
+    series2->clear();
 }
 
 void MainWindow::writeSerial(const QString data1){
@@ -198,7 +227,9 @@ void MainWindow::updateLoadValue(int modeNumber, double loadValue)
     qDebug() << "Mode" << modeNumber << "Load Value:" << loadValue << " , "<<xAxisCounter;
     if(modeNumber == 0 && newFlg){
         writeToLoadCellPlot(xAxisCounter, loadValue);
-        //writeToTempPlot(xAxisCounter, tempValue);
+        writeToTempPlot(xAxisCounter, tempValue, tempValue2);
+        excelHandler->writeValue(excelX, excelY, loadValue);
+
         xAxisCounter += 0.000333333333333;
         if(xAxisCounter > 10){
             newFlg = false;
@@ -223,6 +254,9 @@ void MainWindow::updateTemperatureValue(double tempVal, int tempFaultDetec)
         //writeToTempPlot(xAxisCounter, tempVal);
         //xAxisCounter2++;
         tempValue = tempVal;
+    }
+    if(tempFaultDetec == 3){
+        tempValue2 = tempVal;
     }
 }
 
@@ -295,6 +329,9 @@ void MainWindow::sendParameters(){
 
     temp = QString::number(operaParam->tempSetPoint);
     command = "set tempSetPoint "+temp+"\n";
+    writeSerial(command);
+
+    command = "set mode 1\n";
     writeSerial(command);
 }
 
